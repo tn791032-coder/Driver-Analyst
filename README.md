@@ -1,106 +1,165 @@
-﻿# Grab Supply-Demand Gap Analysis
+﻿# Grab Supply-Demand Gap Analysis 🚖
 
 A ride-hailing supply-demand imbalance analysis inspired by **Grab's Analytics framework**.
 Built for Grab Data Analyst Intern application.
 
+[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Dashboard-Streamlit-red)](https://streamlit.io)
+[![Data](https://img.shields.io/badge/Data-NYC_TLC_2.8M-green)](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
+[![ML](https://img.shields.io/badge/Forecasting-Prophet-orange)](https://facebook.github.io/prophet/)
+
+---
+
+## Business Impact Summary
+
+| Metric | Value |
+|--------|-------|
+| **Trips analyzed** | 2,814,457 |
+| **Undersupplied hours** | 5,193 (14.5% of all hours) |
+| **Peak demand hour** | 17:00 (5 PM) |
+| **Avg gap during undersupply** | 107 trips/hour |
+| **Est. monthly lost revenue** | **~$49,900** |
+| **Est. annual recovered (20% gap reduction)** | **~$119,700** |
+
+> If Grab reduces the supply-demand gap by just 20% through better driver allocation,
+> that's **~$120K/year recovered revenue per market**.
+
+---
+
 ## Business Problem
 
-Grab's core challenge: matching passenger demand with driver supply in real-time.
-When passengers can't find rides → lost revenue, poor experience.
-When drivers have no passengers → wasted time, low earnings.
+Grab's core challenge: matching **passenger demand** with **driver supply** in real-time.
 
-**This project analyzes when, where, and why supply-demand gaps occur — and recommends actions.**
+- Passengers can't find rides → **lost revenue, poor experience**
+- Drivers waiting idly → **wasted time, low earnings**
+
+**This project identifies *when, where, and why* gaps occur — and recommends data-driven actions.**
+
+---
 
 ## Dataset
 
 - **Source:** [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
-- **Type:** Yellow Taxi trips (~5-10M rows/month)
-- **Period:** January 2025
-- **Schema:** 19 columns including pickup/dropoff time, location, fare, distance
+- **Type:** Yellow Taxi (proxy for ride-hailing)
+- **Period:** January 2025 (~2.8M trips after cleaning)
+- **Schema:** 19 columns (pickup/dropoff time, location ID, fare, distance)
 
-## Methodology (adapted from Grab Engineering Blog)
+---
+
+## Methodology
+
+Adapted from [Grab's Analytics framework](https://engineering.grab.com/understanding-supply-demand-ride-hailing-data):
 
 | Term | Definition | Our Proxy |
 |------|-----------|-----------|
-| **Demand** | Passengers requesting rides | Trip pickup count per zone-hour |
-| **Supply** | Online and idle drivers | Dropoff arrivals (drivers becoming available) |
+| **Demand** | Passengers requesting rides | Pickup count per zone-hour |
+| **Supply** | Online & idle drivers | Dropoff arrivals (drivers becoming free) |
 | **Gap** | Demand - Supply | Difference |
-| **SDR** | Supply-Demand Ratio (<0.8 = undersupplied) | Supply / Demand |
+| **SDR** | Supply-Demand Ratio (< 0.8 = undersupplied) | Supply / Demand |
 
-## Tools
-
-| Category | Tools |
-|----------|-------|
-| Data Processing | Python (pandas, numpy, pyarrow) |
-| SQL | PostgreSQL-style exploration queries |
-| Visualization | Matplotlib, Seaborn, Plotly |
-| Dashboard | Streamlit |
-| Forecasting | Prophet (time-series) |
+---
 
 ## Key Findings
 
-1. **Peak demand:** 18:00-19:00 (evening rush hour)
-2. **Worst gap:** 17:00-20:00 in CBD zones (undersupplied by 30-40%)
-3. **Morning pattern:** Residential zones undersupplied 7-9AM
-4. **Airport zones:** Severe evening gap (drivers don't return from airport)
-5. **Weekend:** ~45% more unfulfilled requests vs weekday
-6. **Top undersupplied:** Midtown, Times Square, JFK Airport
+### 1. Peak demand hits at 17:00 (evening rush)
+![Hourly Demand](outputs/chart1_hourly_demand.png)
+
+### 2. Gap widens significantly during 17:00-20:00
+![Demand Supply Gap](outputs/chart2_demand_supply_gap.png)
+
+### 3. Manhattan dominates volume; Queens shows largest gap
+![Borough Gap](outputs/chart3_borough_gap.png)
+
+### 4. Undersupply concentrated in weekday evenings (red = undersupplied)
+![SDR Heatmap](outputs/chart4_sdr_heatmap.png)
+
+### 5. Top undersupplied zones need immediate attention
+![Undersupplied Zones](outputs/chart5_undersupplied_zones.png)
+
+---
 
 ## Recommendations
 
-### Supply-Side
-- Driver incentives for peak hours in top-10 gap zones
-- Airport return bonus to encourage drivers back after airport dropoffs
-- Heatmap widget showing oversupplied zones for repositioning
+### Supply-Side (for Operations)
+| Action | Target | Expected Impact |
+|--------|--------|----------------|
+| **Driver surge incentives** | Top-10 gap zones @ 17:00-20:00 | Reduce gap by ~15% |
+| **Airport return bonus** | JFK/LaGuardia → Manhattan | Increase city supply by ~8% |
+| **Heatmap repositioning** | Drivers in oversupplied zones | Better spatial distribution |
 
-### Demand-Side
-- Travel Trends widget suggesting off-peak booking times
-- Surge pricing activation schedule by zone-hour
-- Staggered promotions for time-insensitive riders
+### Demand-Side (for Product)
+| Action | Target | Expected Impact |
+|--------|--------|----------------|
+| **Travel Trends widget** | Residential areas @ 7-9AM | Shift time-insensitive demand |
+| **Surge pricing schedule** | Zone-hour SDR < 0.8 | Balance supply-demand |
+| **"Book earlier" notification** | CBD @ 16:30-17:00 | Reduce peak load |
+
+---
+
+## Tools & Skills Demonstrated
+
+| Skill | Where |
+|-------|-------|
+| **SQL** | `sql/exploration.sql` — window functions, aggregation, joins |
+| **Python** | `src/` — pandas, numpy, data pipeline |
+| **Data Visualization** | `notebooks/01_eda.ipynb` — matplotlib, seaborn, plotly |
+| **Dashboard** | `dashboard/app.py` — Streamlit (interactive filters, charts) |
+| **Machine Learning** | `notebooks/02_ml_forecast.ipynb` — Prophet time-series |
+| **Geospatial** | GeoPandas, taxi zone mapping |
+| **Business Communication** | This README + executive summary |
+
+---
 
 ## How to Run
 
-`ash
-# 1. Install dependencies
+```bash
 pip install -r requirements.txt
-
-# 2. Download data
 python src/download_data.py
-
-# 3. Clean and process
 python src/data_cleaning.py
-
-# 4. Compute metrics
 python src/metrics.py
-
-# 5. Launch dashboard
 streamlit run dashboard/app.py
-
-# 6. Explore notebooks
 jupyter notebook notebooks/01_eda.ipynb
-`
+```
+
+---
 
 ## Project Structure
 
-`
+```
 grab-supply-demand-analysis/
-├── data/                    # Raw and processed data
+├── data/                    # Raw (59MB) + processed (63MB)
 ├── notebooks/
-│   ├── 01_eda.ipynb         # Exploratory analysis
-│   └── 02_ml_forecast.ipynb # Demand forecasting
+│   ├── 01_eda.ipynb         # Exploratory analysis with visualizations
+│   └── 02_ml_forecast.ipynb # Prophet demand forecasting
 ├── src/
-│   ├── download_data.py     # Data downloader
-│   ├── data_cleaning.py     # Cleaning pipeline
-│   └── metrics.py           # Supply-demand metrics
+│   ├── download_data.py     # NYC TLC data downloader
+│   ├── data_cleaning.py     # Cleaning + feature engineering
+│   └── metrics.py           # Supply-demand metrics computation
 ├── dashboard/
-│   └── app.py               # Streamlit dashboard
+│   └── app.py               # Interactive Streamlit dashboard
 ├── sql/
-│   └── exploration.sql      # SQL exploration queries
+│   └── exploration.sql      # 7 SQL exploration queries
 ├── outputs/                 # Generated charts
 └── README.md
-`
+```
+
+---
 
 ## References
 
-- [Grab Engineering: Understanding Supply and Demand in Ride-hailing](https://engineering.grab.com/understanding-supply-demand-ride-hailing-data)
+- [Grab Engineering: Understanding Supply & Demand in Ride-hailing](https://engineering.grab.com/understanding-supply-demand-ride-hailing-data)
 - [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
+- [Prophet Forecasting](https://facebook.github.io/prophet/)
+
+---
+
+## Interview Talking Points
+
+When asked about this project in an interview:
+
+1. **Problem:** "Grab's core challenge — matching supply and demand in real-time"
+2. **Approach:** "Adapted Grab's own SDR framework from their Engineering Blog"
+3. **Data:** "2.8M NYC taxi trips as ride-hailing proxy, cleaned 19% of raw data"
+4. **Insight:** "Gap peaks 17:00-20:00 in CBD; root cause: drivers don't return from airport"
+5. **Action:** "5 recommendations with estimated $120K/year impact per market"
+6. **Tools:** "SQL + Python + Streamlit + Prophet (forecast)"
